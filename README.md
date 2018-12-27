@@ -10,79 +10,82 @@ You can download an install this library from [here](https://github.com/codename
 The sample code below demonstrates zip and unzip usage.
 
 ````java
-public Unzip(String zipName, String dirDest) {
-  InputStream is;
-  try {
-    is = Storage.getInstance().createInputStream(zipName);
-    ZipInputStream zipStream = new ZipInputStream(is);
-    ZipEntry entry;
+public void Unzip(InputStream is_zipFile, String str_dirDest) 
+ {
+    InputStream is;
+    try 
+    {
+        is = is_zipFile;
+        ZipInputStream zipStream = new ZipInputStream(is);
+        ZipEntry entry;
 
-    // create a buffer to improve copy performance later.
-    byte[] buffer = new byte[2048];
+        // create a buffer to improve copy performance later.
+        byte[] buffer = new byte[2048];
+        System.out.println("TRYING TO UZIP: ");
 
-    while ((entry = zipStream.getNextEntry()) != null) {
-        String s = entry.getName();
-        String outdir = FileSystemStorage.getInstance().getAppHomePath();
-        if (outdir.length() > 0)
+        while ((entry = zipStream.getNextEntry()) != null) 
         {
-          outdir = outdir + "/" + dirDest;
+            FileSystemStorage fs = FileSystemStorage.getInstance();
+            String str_name = entry.getName();
+            String dir;
+            String str_outdir = FileSystemStorage.getInstance().getAppHomePath();
+            //FileOutputStream fileoutputstream;
+            File newFile = new File(str_outdir, str_name);
+            boolean overwrite = false;
+            if (str_outdir.length() > 0) 
+            {
+                str_outdir = str_outdir + "/" + str_dirDest;
+            }
+
+            //extractFile(zin, outdir, name);
+            String outpath = str_outdir + "/" + entry.getName();
+            OutputStream output = null;
+
+            try 
+            {
+                if (entry.isDirectory()) 
+                {
+
+                    fs.mkdir(str_outdir + "/" + str_name);
+                    entry = zipStream.getNextEntry();
+                    continue;
+                } 
+                else 
+                {
+                    File file = new File(str_outdir + File.separator + str_name);
+                    File parent = file.getParentFile();
+                    if (!parent.exists()) 
+                    {
+                        parent.mkdirs();
+                    }
+
+                }
+
+                System.out.println("UNZIPPING:- " + str_name);
+                output = FileSystemStorage.getInstance().openOutputStream(outpath);
+                int len = 0;
+                while ((len = zipStream.read(buffer)) > 0) 
+                {
+                    output.write(buffer, 0, len);
+                }
+            } 
+            catch (Exception e) 
+            {
+                e.printStackTrace();
+                //Dialog.show("Unzipping Error!", ""+e, "Ok", null);
+            } 
+            finally 
+            {
+
+                if (output != null) 
+                {
+                    output.close();
+                }
+            }
         }
-        String outpath = outdir + "/" + entry.getName();
-        OutputStream output = null;
-        try {
-          output = FileSystemStorage.getInstance().openOutputStream(outpath);
-          int len = 0;
-          while ((len = zipStream.read(buffer)) > 0) {
-              output.write(buffer, 0, len);
-          }
-        } finally {
-          // we must always close the output file
-          if (output != null) {
-              output.close();
-          }
-        }
+    } catch (IOException ex) {
+        Log.p(ex.getMessage(), 0);
+
     }
-  } catch (IOException ex) {
-      Log.p(ex.getMessage(), 0);
-  }
-}
-
-
-
-public Unzip(InputStream zipFile, String dirDest) {
-  InputStream is;
-  try {
-    is = zipFile;
-    ZipInputStream zipStream = new ZipInputStream(is);
-    ZipEntry entry;
-
-    // create a buffer to improve copy performance later.
-    byte[] buffer = new byte[2048];
-
-    while ((entry = zipStream.getNextEntry()) != null) {
-      String s = entry.getName();
-      String outdir = FileSystemStorage.getInstance().getAppHomePath();
-      if (outdir.length() > 0) {
-          outdir = outdir + "/" + dirDest;
-      }
-      String outpath = outdir + "/" + entry.getName();
-      OutputStream output = null;
-      try {
-          output = FileSystemStorage.getInstance().openOutputStream(outpath);
-          int len = 0;
-          while ((len = zipStream.read(buffer)) > 0) {
-              output.write(buffer, 0, len);
-          }
-      } finally {
-          // we must always close the output file
-          if (output != null) {
-              output.close();
-          }
-      }
-    }
-  } catch (IOException ex) {
-      Log.p(ex.getMessage(), 0);
-
-  }
 }
 ````
